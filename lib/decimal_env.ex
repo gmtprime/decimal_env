@@ -1,8 +1,80 @@
 defmodule DecimalEnv do
   @moduledoc """
+  This module provides two macros to be able to use `Decimal`s with regular
+  Elixir operators i.e.
+
+      iex> import DecimalEnv
+      iex> decimal do
+      ...>   21.0 + "21.0"
+      ...> end
+      #Decimal<42.0>
+
+  It is possible to provide a decimal context as argument for the macro i.e
+
+      iex> import DecimalEnv
+      iex> decimal [precision: 2] do
+      ...>   1 / 3
+      ...> end
+      #Decimal<0.33>
+
+  > For more information about context check `Decimal.Context` struct in
+  > `Decimal` repository.
+
+  Not all the Elixir statements are valid. The purpose of these macros is to
+  make it easier to write formulas involving `Decimal` type, so writing Elixir
+  code inside the `decimal` block is discouraged i.e.
+
+     iex> import DecimalEnv
+     iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], 0.00,
+     ...>   fn x, acc ->
+     ...>     decimal do: x + acc
+     ...>   end)
+     #Decimal<42.00>
+
+  The previous example calculates the sum of a list of `Float`s, but returns
+  the result as a `Decimal` type. The code is more clear than its equivalent
+  without the macro:
+
+     iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], Decimal.new(0.00),
+     ...>   fn x, %Decimal{} = acc ->
+     ...>     Decimal.add(Decimal.new(x), acc)
+     ...>   end)
+     #Decimal<42.00>
+
+  The only statement offered is `if` statement i.e:
+
+     iex> import DecimalEnv
+     iex> a = 42.0
+     iex> decimal do
+     ...>   if a > 10, do: a, else: 10
+     ...> end
+     #Decimal<42.0>
+
+  > The guard in the `if` statement should be a decimal comparison.
+
+  It is posible to assign variables inside the block, but pattern matching is
+  not available i.e:
+
+     iex> import DecimalEnv
+     iex> decimal [precision: 2] do
+     ...>   a = div(42.1, 2.0)
+     ...>   a * 2
+     ...> end
+     #Decimal<42>
+
+  > Constant values inside the decimal block are precalculated at compile time.
   """
 
   @doc """
+  This macro receives the `Decimal` `context` as a `Keyword` list and a do
+  `block` (`list` argument). The `context` is used to do the operations inside
+  the decimal `block`.
+
+  ## Example
+
+      iex> import DecimalEnv
+      iex> decimal [precision: 2], do: 21.0 * 2
+      #Decimal<42>
   """
   defmacro decimal(context, do: block) do
     context = generate_context(context)
@@ -15,6 +87,14 @@ defmodule DecimalEnv do
   end
 
   @doc """
+  This macro receives a decimal do `block` (`list` argument). The global
+  `Decimal` context is used to do the operations inside the `block`.
+
+  ## Example
+
+      iex> import DecimalEnv
+      iex> decimal do: 21.0 * 2
+      #Decimal<42.0>
   """
   defmacro decimal(do: block) do
     block = expand(block)

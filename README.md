@@ -84,7 +84,7 @@ Add it to your `mix.exs`
 
 ```elixir
 def deps do
-  [{:decimal_env, "~> 0.1"}]
+  [{:decimal_env, "~> 0.2"}]
 end
 ```
 

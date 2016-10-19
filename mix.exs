@@ -1,7 +1,7 @@
 defmodule DecimalEnv.Mixfile do
   use Mix.Project
 
-  @version "0.1.0"
+  @version "0.2.0"
 
   def project do
     [app: :decimal_env,
@@ -20,7 +20,7 @@ defmodule DecimalEnv.Mixfile do
   end
 
   defp deps do
-    [{:decimal, "~> 1.2"},
+    [{:decimal, "~> 1.1.2 or ~> 1.2"},
      {:earmark, ">= 0.0.0", only: :dev},
      {:ex_doc, "~> 0.13", only: :dev},
      {:credo, "~> 0.4.8", only: [:dev, :docs]},

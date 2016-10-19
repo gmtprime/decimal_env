@@ -22,45 +22,45 @@ defmodule DecimalEnv do
 
   Not all the Elixir statements are valid. The purpose of these macros is to
   make it easier to write formulas involving `Decimal` type, so writing Elixir
-  code inside the `decimal` block is discouraged i.e.
+  code inside the `decimal` block is discouraged i.e:
 
-     iex> import DecimalEnv
-     iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], 0.00,
-     ...>   fn x, acc ->
-     ...>     decimal do: x + acc
-     ...>   end)
-     #Decimal<42.00>
+      iex> import DecimalEnv
+      iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], 0.00,
+      ...>   fn x, acc ->
+      ...>     decimal do: x + acc
+      ...>   end)
+      #Decimal<42.00>
 
   The previous example calculates the sum of a list of `Float`s, but returns
   the result as a `Decimal` type. The code is more clear than its equivalent
   without the macro:
 
-     iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], Decimal.new(0.00),
-     ...>   fn x, %Decimal{} = acc ->
-     ...>     Decimal.add(Decimal.new(x), acc)
-     ...>   end)
-     #Decimal<42.00>
+      iex> Enum.reduce([10.99, 10.01, 20.99, 0.01], Decimal.new(0.00),
+      ...>   fn x, %Decimal{} = acc ->
+      ...>     Decimal.add(Decimal.new(x), acc)
+      ...>   end)
+      #Decimal<42.00>
 
   The only statement offered is `if` statement i.e:
 
-     iex> import DecimalEnv
-     iex> a = 42.0
-     iex> decimal do
-     ...>   if a > 10, do: a, else: 10
-     ...> end
-     #Decimal<42.0>
+      iex> import DecimalEnv
+      iex> a = 42.0
+      iex> decimal do
+      ...>   if a > 10, do: a, else: 10
+      ...> end
+      #Decimal<42.0>
 
   > The guard in the `if` statement should be a decimal comparison.
 
   It is posible to assign variables inside the block, but pattern matching is
   not available i.e:
 
-     iex> import DecimalEnv
-     iex> decimal [precision: 2] do
-     ...>   a = div(42.1, 2.0)
-     ...>   a * 2
-     ...> end
-     #Decimal<42>
+      iex> import DecimalEnv
+      iex> decimal [precision: 2] do
+      ...>   a = div(42.1, 2.0)
+      ...>   a * 2
+      ...> end
+      #Decimal<42>
 
   > Constant values inside the decimal block are precalculated at compile time.
   """

@@ -279,6 +279,22 @@ defmodule DecimalEnvTest do
     assert {:ok, Decimal.new(42.0)} == result
   end
 
+  test "Expand binary and" do
+    result =
+      DecimalEnv.decimal do
+        42.0 < 41.0 and true
+      end
+    assert result == false
+  end
+
+  test "Expand binary or" do
+    result =
+      DecimalEnv.decimal do
+        42.0 < 41.0 or true
+      end
+    assert result == true
+  end
+
   test "Expand binary at runtime" do
     number = "42.0"
     result =

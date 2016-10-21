@@ -237,6 +237,18 @@ defmodule DecimalEnv do
     if_stmt = {:if, context, [condition, [do: is_true, else: is_false]]}
     quote do: unquote(if_stmt)
   end
+  defp expand({:and, context, [lhs, rhs]}) do
+    lhs = expand(lhs)
+    rhs = expand(rhs)
+    and_op = {:and, context, [lhs, rhs]}
+    quote do: unquote(and_op)
+  end
+  defp expand({:or, context, [lhs, rhs]}) do
+    lhs = expand(lhs)
+    rhs = expand(rhs)
+    or_op = {:or, context, [lhs, rhs]}
+    quote do: unquote(or_op)
+  end
   defp expand({name, _, _} = var) when is_atom(name) or is_tuple(name) do
     quote do: apply(DecimalEnv, :expand_rt, [unquote(var)])
   end

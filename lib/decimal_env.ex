@@ -12,7 +12,7 @@ defmodule DecimalEnv do
   It is possible to provide a decimal context as argument for the macro i.e
 
       iex> import DecimalEnv
-      iex> decimal [precision: 2] do
+      iex> decimal context: [precision: 2] do
       ...>   1 / 3
       ...> end
       #Decimal<0.33>
@@ -56,29 +56,71 @@ defmodule DecimalEnv do
   not available i.e:
 
       iex> import DecimalEnv
-      iex> decimal [precision: 2] do
+      iex> decimal context: [precision: 2] do
       ...>   a = div(42.1, 2.0)
       ...>   a * 2
       ...> end
       #Decimal<42>
 
   > Constant values inside the decimal block are precalculated at compile time.
+
+  To avoid calculating the `Decimal` value every time a variable external to
+  the block is mentioned inside the block, use the `:bind` i.e:
+
+      iex> import DecimalEnv
+      iex> a = 3
+      iex> x = 4
+      iex> decimal bind: [a: a] do
+      ...>   a * (x + 1 + a * a)
+      ...> end
+      #Decimal<42>
+
+  In the previous example, the variable `a` is converted to `Decimal` only one
+  time instead of three times. The variable `x` only appears one time, so there
+  is no need to add it to the bind `Keyword` list.
+
+  Additionally you can change the name of the external variable by changing the
+  name of the key associated with it i.e:
+
+      iex> import DecimalEnv
+      iex> a = 3
+      iex> x = 4
+      iex> decimal bind: [b: a] do
+      ...>   b * (x + 1 + b * b)
+      ...> end
+      #Decimal<42>
+
+  In the previous example, the external variable `a` is renamed to `b` inside
+  the decimal block.
   """
 
   @doc """
-  This macro receives the `Decimal` `context` as a `Keyword` list and a do
-  `block` (`list` argument). The `context` is used to do the operations inside
-  the decimal `block`.
+  This macro receives a list of `options` and a do `block` (`list` argument).
+  The `options` available are:
+  
+    * `context`: Keyword list containing the context definition. The keys have
+    the same name as the ones in the `Decimal.Context` struct.
+    * `bind`: Keyword list that indicates which external variables should be
+    converted to `Decimal` right away before the block is executed.
 
   ## Example
 
       iex> import DecimalEnv
-      iex> decimal [precision: 2], do: 21.0 * 2
+      iex> decimal context: [precision: 2] do
+      ...>   21.0 * 2
+      ...> end
       #Decimal<42>
   """
-  defmacro decimal(context, do: block) do
-    context = generate_context(context)
-    block = expand(block)
+  defmacro decimal(options, do: block) do
+    bound = bind_decimal(options[:bind])
+    context = generate_context(options[:context])
+    block =
+      case expand(block) do
+        {:__block__, _, stmts} ->
+          {:__block__, [], bound ++ stmts}
+        other ->
+          {:__block__, [], bound ++ [other]}
+      end
     quote do
       Decimal.with_context(unquote(context), fn ->
         unquote(block)
@@ -215,9 +257,9 @@ defmodule DecimalEnv do
     members = Enum.map(members, &expand/1)
     quote do: unquote({:{}, context, members})
   end
-  defp expand(list) when is_list(list) do
-    list = Enum.map(list, &expand/1)
-    quote do: unquote(list)
+  defp expand(xs) when is_list(xs) do
+    xs = Enum.map(xs, &expand/1)
+    quote do: unquote(xs)
   end
   defp expand({fst, snd}) do
     fst = expand(fst)
@@ -230,11 +272,11 @@ defmodule DecimalEnv do
     bind = {:=, context, [lhs, rhs]}
     quote do: unquote(bind)
   end
-  defp expand({:if, context, [condition, [do: is_true, else: is_false]]}) do
-    condition = expand(condition)
+  defp expand({:if, context, [guard, [do: is_true, else: is_false]]}) do
+    guard = expand(guard)
     is_true = expand(is_true)
     is_false = expand(is_false)
-    if_stmt = {:if, context, [condition, [do: is_true, else: is_false]]}
+    if_stmt = {:if, context, [guard, [do: is_true, else: is_false]]}
     quote do: unquote(if_stmt)
   end
   defp expand({:and, context, [lhs, rhs]}) do
@@ -294,6 +336,9 @@ defmodule DecimalEnv do
 
   ##
   # Generates context depending on a list of options.
+  defp generate_context(nil) do
+    generate_context([])
+  end
   defp generate_context([]) do
     quote do
       Decimal.get_context()
@@ -314,5 +359,17 @@ defmodule DecimalEnv do
         traps: unquote(context[:traps])
       }
     end
+  end
+
+  ##
+  # Expands variables bound to the block.
+  defp bind_decimal(nil) do
+    []
+  end
+  defp bind_decimal(list) when is_list(list) do
+    Enum.map(list, fn {k, v} ->
+      name = Macro.var(k, nil)
+      quote do: unquote(name) = DecimalEnv.expand_rt(unquote(v))
+    end)
   end
 end

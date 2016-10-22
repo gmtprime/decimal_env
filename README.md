@@ -78,6 +78,39 @@ iex(2)> decimal [precision: 2] do
 
 > Constant values inside the decimal block are precalculated at compile time.
 
+To avoid calculating the `Decimal` value every time a variable external to
+the block is mentioned inside the block, use the `:bind` option:
+
+```elixir
+iex> import DecimalEnv
+iex> a = 3
+iex> x = 4
+iex> decimal bind: [a: a] do
+...>   a * (x + 1 + a * a)
+...> end
+#Decimal<42>
+```
+
+In the previous example, the variable `a` is converted to `Decimal` only one
+time instead of three times. The variable `x` only appears one time, so there
+is no need to add it to the bind `Keyword` list.
+
+Additionally you can change the name of the external variable by changing the
+name of the key associated with it i.e:
+
+```elixir
+iex> import DecimalEnv
+iex> a = 3
+iex> x = 4
+iex> decimal bind: [b: a] do
+...>   b * (x + 1 + b * b)
+...> end
+#Decimal<42>
+```
+
+In the previous example, the external variable `a` is renamed to `b` inside
+the decimal block.
+
 ## Installation
 
 Add it to your `mix.exs`

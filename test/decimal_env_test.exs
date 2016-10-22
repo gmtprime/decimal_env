@@ -298,7 +298,7 @@ defmodule DecimalEnvTest do
   test "Expand binary at runtime" do
     number = "42.0"
     result =
-      DecimalEnv.decimal do
+      DecimalEnv.decimal bind: [number: number] do
         number
       end
     expected = Decimal.new("42.0")
@@ -308,7 +308,7 @@ defmodule DecimalEnvTest do
   test "Expand number at runtime" do
     number = 42.0
     result =
-      DecimalEnv.decimal do
+      DecimalEnv.decimal bind: [number: number] do
         number
       end
     expected = Decimal.new(number)
@@ -318,7 +318,7 @@ defmodule DecimalEnvTest do
   test "Expand tuple at runtime" do
     tuple = {1, 2, 3}
     result =
-      DecimalEnv.decimal do
+      DecimalEnv.decimal bind: [tuple: tuple] do
         tuple
       end
     expected = {Decimal.new(1), Decimal.new(2), Decimal.new(3)}
@@ -328,7 +328,7 @@ defmodule DecimalEnvTest do
   test "Expand list at runtime" do
     list = [1, 2, 3]
     result =
-      DecimalEnv.decimal do
+      DecimalEnv.decimal bind: [list: list] do
         list
       end
     expected = Enum.map(list, &Decimal.new/1)
@@ -355,7 +355,7 @@ defmodule DecimalEnvTest do
 
   test "Decimal with context" do
     result =
-      DecimalEnv.decimal [precision: 1] do
+      DecimalEnv.decimal context: [precision: 1] do
         42.0
       end
     expected =

@@ -17,7 +17,7 @@ It is possible to provide a decimal context as argument for the macro i.e
 
 ```elixir
 iex(1)> import DecimalEnv
-iex(2)> decimal [precision: 2] do
+iex(2)> decimal context: [precision: 2] do
 ...(2)>   1 / 3
 ...(2)> end
 #Decimal<0.33>
@@ -69,7 +69,7 @@ not available i.e:
 
 ```elixir
 iex(1)> import DecimalEnv
-iex(2)> decimal [precision: 2] do
+iex(2)> decimal do
 ...(2)>   a = div(42.1, 2.0)
 ...(2)>   a * 2
 ...(2)> end

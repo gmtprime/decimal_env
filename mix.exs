@@ -1,18 +1,18 @@
 defmodule DecimalEnv.Mixfile do
   use Mix.Project
 
-  @version "0.2.3"
+  @version "0.3.0"
 
   def project do
     [app: :decimal_env,
      version: @version,
-     elixir: "~> 1.2",
+     elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     description: description,
-     package: package,
-     docs: docs,
-     deps: deps]
+     description: description(),
+     package: package(),
+     docs: docs(),
+     deps: deps()]
   end
 
   def application do
@@ -20,11 +20,10 @@ defmodule DecimalEnv.Mixfile do
   end
 
   defp deps do
-    [{:decimal, "~> 1.1.2 or ~> 1.2"},
-     {:earmark, ">= 0.0.0", only: :dev},
-     {:ex_doc, "~> 0.13", only: :dev},
-     {:credo, "~> 0.4.8", only: [:dev, :docs]},
-     {:inch_ex, ">= 0.0.0", only: [:dev, :docs]}]
+    [{:decimal, "~> 1.3"},
+     {:ex_doc, "~> 0.15", only: :dev},
+     {:credo, "~> 0.7", only: [:dev, :docs]},
+     {:inch_ex, "~> 0.5", only: [:dev, :docs]}]
   end
 
   defp docs do

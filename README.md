@@ -117,7 +117,7 @@ Add it to your `mix.exs`
 
 ```elixir
 def deps do
-  [{:decimal_env, "~> 0.2"}]
+  [{:decimal_env, "~> 0.3"}]
 end
 ```
 

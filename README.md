@@ -1,9 +1,12 @@
 # DecimalEnv
 
-[![Build Status](https://travis-ci.org/gmtprime/decimal_env.svg?branch=master)](https://travis-ci.org/gmtprime/decimal_env) [![Hex pm](http://img.shields.io/hexpm/v/decimal_env.svg?style=flat)](https://hex.pm/packages/decimal_env) [![hex.pm downloads](https://img.shields.io/hexpm/dt/decimal_env.svg?style=flat)](https://hex.pm/packages/decimal_env) [![Deps Status](https://beta.hexfaktor.org/badge/all/github/gmtprime/decimal_env.svg)](https://beta.hexfaktor.org/github/gmtprime/decimal_env) [![Inline docs](http://inch-ci.org/github/gmtprime/decimal_env.svg?branch=master)](http://inch-ci.org/github/gmtprime/decimal_env)
+![Build status](https://github.com/gmtprime/decimal_env/actions/workflows/checks.yml/badge.svg) [![Hex pm](http://img.shields.io/hexpm/v/decimal_env.svg?style=flat)](https://hex.pm/packages/decimal_env) [![hex.pm downloads](https://img.shields.io/hexpm/dt/decimal_env.svg?style=flat)](https://hex.pm/packages/decimal_env)
 
-This library provides two macros to be able to use `Decimal`s with regular
-Elixir operators i.e.
+> **Environment** (_noun_): The totality of the natural world, often excluding
+> humans.
+
+This library provides a macro to encapsulate `Decimal` operations while using
+Elixir operators e.g:
 
 ```elixir
 iex(1)> import DecimalEnv
@@ -13,103 +16,49 @@ iex(2)> decimal do
 #Decimal<42.0>
 ```
 
-It is possible to provide a decimal context as argument for the macro i.e
+> For more information on `Decimal` library, you can go to
+> [its documentation](https://hexdocs.pm/decimal/readme.html).
+
+There are two options we can provide to control the operations happening inside
+the `decimal` block:
+
+- `:context` - `Decimal.Context` struct. it can also be a `keyword` list. Check
+  [its documentation](https://hexdocs.pm/decimal/Decimal.Context.html#content)
+  for more information.
+- `:as` - In which type we should have the result. The possible values are
+  the following:
+  + `:decimal` (default)
+  + `:float`
+  + `:integer`
+  + `:string`
+  + `:xsd`
+  + `:raw`
+  + `:scientific`
+
+The following would be a more complex example for the macro:
 
 ```elixir
 iex(1)> import DecimalEnv
-iex(2)> decimal context: [precision: 2] do
-...(2)>   1 / 3
+iex(2)> decimal context: [precision: 2, rounding: :ceiling], as: :integer do
+...(2)>   21.1 + 20
 ...(2)> end
-#Decimal<0.33>
+42
 ```
 
-> For more information about context check `Decimal.Context` struct in
-> `Decimal` repository.
-
-Not all the Elixir statements are valid. The purpose of these macros is to
-make it easier to write formulas involving `Decimal` type, so writing Elixir
-code inside the `decimal` block is discouraged i.e.
+The macro overloads all Elixir numeric operators and that's why the block can
+contain any valid Elixir code e.g. the following snippet calculates the mean
+of the numbers `1`, `2`, `3` and `4` which is `2.5`:
 
 ```elixir
 iex(1)> import DecimalEnv
-iex(2)> Enum.reduce([10.99, 10.01, 20.99, 0.01], 0.00,
-...(2)>   fn x, acc ->
-...(2)>     decimal do: x + acc
-...(2)>   end)
-#Decimal<42.00>
-```
-
-The previous example calculates the sum of a list of `Float`s, but returns
-the result as a `Decimal` type. The code is more clear than its equivalent
-without the macro:
-
-```elixir
-iex(1)> Enum.reduce([10.99, 10.01, 20.99, 0.01], Decimal.new(0.00),
-...(2)>   fn x, %Decimal{} = acc ->
-...(2)>     Decimal.add(Decimal.new(x), acc)
-...(2)>   end)
-#Decimal<42.00>
-```
-
-The only statement offered is `if` statement i.e:
-
-```elixir
-iex(1)> import DecimalEnv
-iex(1)> a = 42.0
-iex(3)> decimal do
-...(3)>   if a > 10, do: a, else: 10
-...(3)> end
-#Decimal<42.0>
-```
-
-> The guard in the `if` statement should be a decimal comparison.
-
-It is posible to assign variables inside the block, but pattern matching is
-not available i.e:
-
-```elixir
-iex(1)> import DecimalEnv
-iex(2)> decimal do
-...(2)>   a = div(42.1, 2.0)
-...(2)>   a * 2
+iex(2)> decimal as: :float do
+...(2)>   values = [1,2,3,4]
+...(2)>   amount = length(values)
+...(2)>
+...(2)>   Enum.reduce(values, 0, &(&1 + &2)) / amount
 ...(2)> end
-#Decimal<42>
+2.5
 ```
-
-> Constant values inside the decimal block are precalculated at compile time.
-
-To avoid calculating the `Decimal` value every time a variable external to
-the block is mentioned inside the block, use the `:bind` option:
-
-```elixir
-iex> import DecimalEnv
-iex> a = 3
-iex> x = 4
-iex> decimal bind: [a: a] do
-...>   a * (x + 1 + a * a)
-...> end
-#Decimal<42>
-```
-
-In the previous example, the variable `a` is converted to `Decimal` only one
-time instead of three times. The variable `x` only appears one time, so there
-is no need to add it to the bind `Keyword` list.
-
-Additionally you can change the name of the external variable by changing the
-name of the key associated with it i.e:
-
-```elixir
-iex> import DecimalEnv
-iex> a = 3
-iex> x = 4
-iex> decimal bind: [b: a] do
-...>   b * (x + 1 + b * b)
-...> end
-#Decimal<42>
-```
-
-In the previous example, the external variable `a` is renamed to `b` inside
-the decimal block.
 
 ## Installation
 
@@ -117,7 +66,7 @@ Add it to your `mix.exs`
 
 ```elixir
 def deps do
-  [{:decimal_env, "~> 0.3"}]
+  [{:decimal_env, "~> 1.0"}]
 end
 ```
 

@@ -4,6 +4,9 @@
 /doc
 /docs
 /config
+/priv/plts/decimal_env.plt
+/priv/plts/decimal_env.plt.hash
 erl_crash.dump
 *.ez
-*.swp
+.tool-versions
+.elixir_ls
